@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -40,19 +41,30 @@ search_path(const std::string& executable)
   return std::nullopt;
 }
 
-static void
-execute(const std::string& input)
+static std::vector<std::string>
+parse_args(const std::string& input)
 {
   std::vector<std::string> args;
   std::istringstream iss(input);
   std::string token;
-  pid_t pid;
 
   // Extract whitespace separated arguments from the input.
+  // TODO: Add support for quoted arguments.
+  // TODO: Add support for environment variables.
+  // TODO: Add support for escaped characters.
   while (iss >> token)
   {
     args.push_back(token);
   }
+
+  return args;
+}
+
+static void
+execute(const std::string& input)
+{
+  auto args = parse_args(input);
+  pid_t pid;
 
   // Do nothing if the input was blank.
   if (args.empty())
