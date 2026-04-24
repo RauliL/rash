@@ -17,8 +17,53 @@
 
 using builtin_command = std::function<void(const std::vector<std::string>&)>;
 
+static void
+command_chdir(const std::vector<std::string>& args)
+{
+  std::string path;
+
+  switch (args.size())
+  {
+    case 1:
+      if (const auto home = std::getenv("HOME"))
+      {
+        path = home;
+      }
+      break;
+
+    case 2:
+      path = args[1];
+      break;
+
+    default:
+      std::cerr << "chdir: too many arguments" << std::endl;
+      return;
+  }
+
+  if (!std::filesystem::exists(path))
+  {
+    std::cerr << "chdir: no such file or directory: " << path << std::endl;
+  }
+  else if (!std::filesystem::is_directory(path))
+  {
+    std::cerr << "chdir: not a directory: " << path << std::endl;
+  }
+  else if (chdir(path.c_str()))
+  {
+    std::cerr << "chdir: failed to change directory: " << path << std::endl;
+  }
+}
+
 static const std::unordered_map<std::string, builtin_command> builtin_commands =
 {
+  {
+    "cd",
+    command_chdir,
+  },
+  {
+    "chdir",
+    command_chdir,
+  },
   {
     "exit",
     [](const std::vector<std::string>& args)
