@@ -5,6 +5,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <sys/wait.h>
@@ -13,6 +14,43 @@
 #if !defined(BUFSIZ)
 #  define BUFSIZ 1024
 #endif
+
+using builtin_command = std::function<void(const std::vector<std::string>&)>;
+
+static const std::unordered_map<std::string, builtin_command> builtin_commands =
+{
+  {
+    "exit",
+    [](const std::vector<std::string>& args)
+    {
+      int status_code;
+
+      switch (args.size())
+      {
+        case 1:
+          status_code = EXIT_SUCCESS;
+          break;
+
+        case 2:
+          try
+          {
+            status_code = std::stoi(args[1]);
+          }
+          catch (const std::invalid_argument&)
+          {
+            std::cerr << "exit: invalid argument" << std::endl;
+            return;
+          }
+          break;
+
+        default:
+          std::cerr << "exit: too many arguments" << std::endl;
+          return;
+      }
+      std::exit(status_code);
+    },
+  },
+};
 
 static std::optional<std::filesystem::path>
 search_path(const std::string& executable)
@@ -60,6 +98,21 @@ parse_args(const std::string& input)
   return args;
 }
 
+static bool
+execute_builtin(const std::vector<std::string>& args)
+{
+  const auto it = builtin_commands.find(args[0]);
+
+  if (it != builtin_commands.end())
+  {
+    it->second(args);
+
+    return true;
+  }
+
+  return false;
+}
+
 static void
 execute(const std::string& input)
 {
@@ -72,10 +125,10 @@ execute(const std::string& input)
     return;
   }
 
-  // Check for builtin shell commands.
-  if (args[0] == "exit")
+  // Check for builtin shell commands first.
+  if (execute_builtin(args))
   {
-    std::exit(EXIT_SUCCESS);
+    return;
   }
 
   // If the first argument is not absolute path, search the $PATH environment
