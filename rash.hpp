@@ -22,6 +22,7 @@ extern std::unordered_map<std::string, builtin_command> builtins;
 
 // env.cpp
 void init_env();
+std::optional<std::string> get_env(const std::string&);
 std::optional<std::filesystem::path> search_for_executable(const std::string&);
 
 // exec.cpp

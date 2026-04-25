@@ -21,6 +21,19 @@ init_env()
   }
 }
 
+std::optional<std::string>
+get_env(const std::string& name)
+{
+  const auto it = env.find(name);
+
+  if (it != std::end(env))
+  {
+    return it->second;
+  }
+
+  return std::nullopt;
+}
+
 static std::vector<std::filesystem::path>
 split_path(const std::string& var)
 {

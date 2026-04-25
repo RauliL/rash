@@ -15,9 +15,13 @@ command_chdir(
   switch (args.size())
   {
     case 1:
-      if (const auto home = std::getenv("HOME"))
+      if (const auto home = get_env("HOME"))
       {
-        path = home;
+        path = *home;
+      } else {
+        err << "chdir: HOME environment variable not set" << std::endl;
+
+        return EXIT_FAILURE;
       }
       break;
 
