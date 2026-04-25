@@ -13,6 +13,8 @@
 
 using builtin_command = std::function<void(const std::vector<std::string>&)>;
 
+static std::unordered_map<std::string, std::string> env;
+
 static void
 command_chdir(const std::vector<std::string>& args)
 {
@@ -96,11 +98,13 @@ static const std::unordered_map<std::string, builtin_command> builtin_commands =
 static std::optional<std::filesystem::path>
 search_path(const std::string& executable)
 {
-  if (const auto path_var = std::getenv("PATH"))
+  const auto it = env.find("PATH");
+
+  if (it != std::end(env))
   {
     std::vector<std::filesystem::path> entries;
     std::string entry;
-    std::istringstream iss(path_var);
+    std::istringstream iss(it->second);
 
     while (std::getline(iss, entry, ':'))
     {
@@ -222,11 +226,27 @@ execute(const std::string& input)
   }
 }
 
+static void
+initialize_env()
+{
+  for (auto e = environ; *e; ++e)
+  {
+    const auto pos = std::strchr(*e, '=');
+
+    if (pos != nullptr)
+    {
+      *pos = 0;
+      env[*e] = pos + 1;
+    }
+  }
+}
+
 int
 main()
 {
   std::string input;
 
+  initialize_env();
   for (;;)
   {
     std::cout << "# ";
