@@ -197,7 +197,9 @@ execute(const std::string& input)
   {
     // We need to convert all std::string arguments into C style character
     // arrays for the execve() call. It also needs to be null terminated.
+    // Same is true for the environment variables passed to execve().
     std::vector<const char*> child_args;
+    std::vector<const char*> child_env;
 
     for (const auto& arg : args)
     {
@@ -205,12 +207,18 @@ execute(const std::string& input)
     }
     child_args.push_back(nullptr);
 
+    for (const auto& [key, value] : env)
+    {
+      child_env.push_back((key + "=" + value).c_str());
+    }
+    child_env.push_back(nullptr);
+
     // Execute the command. On successful execution it should never return, so
     // if it does there was an error of some kind.
     execve(
       args[0].c_str(),
       const_cast<char* const*>(child_args.data()),
-      environ
+      const_cast<char* const*>(child_env.data())
     );
 
     // If we get at this point, there was an error of some kind. Output it to
