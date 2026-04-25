@@ -11,10 +11,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#if !defined(BUFSIZ)
-#  define BUFSIZ 1024
-#endif
-
 using builtin_command = std::function<void(const std::vector<std::string>&)>;
 
 static void
